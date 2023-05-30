@@ -31,7 +31,8 @@ app.post('/', async (req: any, res: any) => {
   const cacheKey = `search:${searchTerm}`;
   const existResult = await redisClient.get(cacheKey);
   if (existResult) {
-    return existResult;
+    const renderedResult = renderSearchResults(JSON.parse(existResult));
+    return res.send(renderedResult);
   }
 
   const [people, planets, starships] = await Promise.all([
@@ -54,6 +55,8 @@ app.post('/', async (req: any, res: any) => {
       ...starship
     })),
   ];
+
+  await redisClient.set(cacheKey, JSON.stringify(searchResults));
 
   const renderedResult = renderSearchResults(searchResults);
 
